@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="icon" href="https://icon-icons.com/downloadimage.php?id=2535&root=37/ICO/48/&file=note_audio_music_3097.ico" type="image/x-icon">
+
+    <title>Search and Listen | DEEZER | SOUNDCLOUD</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Arial, sans-serif;
+        }
+        select {
+            padding: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            background-color: #444;
+            color: white;
+            width: 100%;
+            margin-right: 10px;
+        }
+        .container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background-color: #222;
+            color: white;
+        }
+
+        .searchBlock {
+            padding: 20px;
+            border-radius: 15px;
+            background-color: #333;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px;
+        }
+
+        .searchForm {
+            display: flex;
+            align-items: center;
+            width: 100%; 
+            max-width: 400px; 
+        }
+
+        #search {
+            padding: 10px;
+            font-size: 16px;
+            width: 100%; 
+            border: none;
+            border-radius: 5px;
+            margin: 0;
+            height: 15px;
+        }
+
+        #searchForm button {
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            height: 35px;
+            margin-left: 10px;
+        }
+        .result-card {
+            display: flex;
+            flex-direction: column;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 20px;
+            background-color: #333;
+        }
+
+        .result-card img {
+            max-width: 150px;
+            max-height: 150px; 
+            border-radius: 5px;
+        }
+
+        .result-card p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+
+        .result-card button {
+            margin-left: auto;
+            padding: 8px 16px;
+            font-size: 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .linksBlock {
+            padding: 20px;
+            border-radius: 15px;
+            background-color: #333;
+            margin: 20px;
+            overflow: auto; /* Добавлено свойство overflow */
+            max-height: 400px; /* Задайте желаемую максимальную высоту */
+            display: none;
+        }
+        @media (max-width: 768px) {
+        .searchBlock {
+            flex-direction: column; 
+            align-items: flex-start; 
+        }
+
+        .searchForm {
+            flex-direction: column;
+            align-items: center;
+            max-width: none; 
+        }
+
+        #search {
+            width: 100%; 
+            margin-bottom: 10px; 
+        }
+
+        #searchForm button {
+            width: 100%; 
+        }
+    }
+    </style>
+</head>
+<body>
+
+
+
+    <div class="container">
+        <div class="searchBlock">
+            <form class="searchForm" id="searchForm">
+                <select id="searchType" name="type">
+                    <option value="deezer">Deezer</option>
+                    <option value="sc">SoundCloud</option>
+                </select>
+                <input type="text" id="search" name="query" placeholder="Search query...">
+                <button type="submit">Search</button>
+            </form>
+        </div>
+        <div class="linksBlock" id="linksBlock"></div>
+        <div class="playerBlock" id="playerBlock"></div>
+    </div>
+    <script>
+        
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchForm = document.getElementById("searchForm");
+            const searchType = document.getElementById("searchType");
+            const linksBlock = document.getElementById("linksBlock");
+            const playerBlock = document.getElementById("playerBlock");
+            
+            searchForm.addEventListener("submit", async function(event) {
+                event.preventDefault();
+                const searchInput = document.getElementById("search");
+                const query = searchInput.value;
+                const type = searchType.value;
+                const url = `https://musicservergi.fawib89238.repl.co//search?type=${type}&qu=${query}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                displayResults(data, type);
+            });
+            
+            function displayResults(results, type) {
+                linksBlock.innerHTML = "";
+                
+                results.forEach(item => {
+                    const card = document.createElement("div");
+                    card.className = "result-card";
+                    
+                    const image = document.createElement("img");
+                    if (type == 'deezer') {
+                        image.src = item.album.cover;
+                    } else {
+                        image.src = item.artwork_url;
+                    }
+                    
+                    card.appendChild(image);
+                    
+                    const title = document.createElement("p");
+                    title.textContent = item.title;
+                    card.appendChild(title);
+
+                    const artist = document.createElement("p");
+                    if (type == 'deezer') {
+                        artist.textContent = item.artist.name;
+                    } else {
+                        artist.textContent = item.user.username;
+                    }
+                    
+                    card.appendChild(artist);
+                    
+
+                    const playerBtn = document.createElement("button");
+                    playerBtn.textContent = "Play";
+                    playerBtn.addEventListener("click", function() {
+                        createAudioPlayer(item.id, playerBtn, artist.textContent, title.textContent); // Передача элемента кнопки
+                    });
+                    card.appendChild(playerBtn);
+            
+                    linksBlock.appendChild(card);
+                });
+                
+                linksBlock.style.display = "block";
+                playerBlock.style.display = "none";
+            }
+            
+            function createAudioPlayer(trackId, buttonElement, artist, title) {
+                const audioPlayer = document.createElement("audio");
+
+                const type = searchType.value;
+                
+                document.title = `${artist} - ${title}`
+                audioPlayer.src = `https://musicservergi.fawib89238.repl.co//stream?type=${type}&id=${trackId}`;
+                audioPlayer.controls = true;
+                audioPlayer.addEventListener("ended", function() {
+                    document.title = document.title;
+                });
+                const parentCard = buttonElement.closest(".result-card"); // Получаем родительскую карточку
+                const buttonIndex = Array.from(parentCard.children).indexOf(buttonElement); // Индекс кнопки внутри карточки
+
+                parentCard.replaceChild(audioPlayer, buttonElement); // Заменяем кнопку на плеер внутри карточки
+                parentCard.children[buttonIndex].classList.add("audio-player"); // Добавляем класс для стилизации
+            }
+        });
+    </script>
+</body>
+</html>
